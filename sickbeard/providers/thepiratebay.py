@@ -58,8 +58,9 @@ class ThePirateBayProvider(generic.TorrentProvider):
         self.proxy = ThePirateBayWebproxy() 
         self.url = 'http://thepiratebay.pe/'
         self.searchurl =  self.url + 'search/%s/0/7/200'  # order by seed       
-        self.re_title_url = '<td>.*?".*?/torrent/\d+/(?P<title>.*?)%s".*?<a href=".*?(?P<url>magnet.*?)%s".*?</td>'
- 
+        #self.re_title_url = '<td>.*?".*?/torrent/\d+/(?P<title>.*?)%s".*?<a href=".*?(?P<url>magnet.*?)%s".*?</td>'
+        self.re_title_url = '/torrent/(?P<id>\d+)/(?P<title>.*?)".*href="(?P<url>magnet.*?)".*<td align="right">(?P<seeders>\d+)</td>.*<td align="right">(?P<leechers>\d+)</td>'
+
     ###################################################################################################
     def isEnabled(self):
         return sickbeard.THEPIRATEBAY
@@ -138,11 +139,11 @@ class ThePirateBayProvider(generic.TorrentProvider):
                 
         if ep_obj.show.air_by_date:
             for show_name in set(show_name_helpers.allPossibleShowNames(ep_obj.show)):
-                ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ str(ep_obj.airdate).replace('-', '.')
+                ep_string = show_name +' '+ str(ep_obj.airdate).replace('-', '.')
                 search_string.append(ep_string)
         else:
             for show_name in set(show_name_helpers.allPossibleShowNames(ep_obj.show)):
-                ep_string = show_name_helpers.sanitizeSceneName(show_name) +' '+ sickbeard.config.naming_ep_type[2] % {'seasonnumber': ep_obj.season, 'episodenumber': ep_obj.episode}
+                ep_string = show_name +' '+ sickbeard.config.naming_ep_type[2] % {'seasonnumber': ep_obj.season, 'episodenumber': ep_obj.episode}
                 search_string.append(ep_string)
     
         return search_string
@@ -192,7 +193,7 @@ class ThePirateBayProvider(generic.TorrentProvider):
         result = None
 
         try:
-            result = helpers.getURL(url, headers)
+            result = helpers.getURL(url, None, headers)
         except (urllib2.HTTPError, IOError), e:
             logger.log(u"Error loading "+self.name+" URL: " + str(sys.exc_info()) + " - " + ex(e), logger.ERROR)
             return None
@@ -301,8 +302,9 @@ class ThePirateBayWebproxy:
         """ Return the Proxyfied RE string """
         if self.isEnabled():
             re = re %('&amp;b=32','&amp;b=32')
-        else:
-            re = re %('','')   
+        #else:
+        #    re = re
+        #re = re %('','')   
         return re
 
 provider = ThePirateBayProvider()
